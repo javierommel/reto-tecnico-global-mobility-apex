@@ -1,0 +1,68 @@
+package com.rommelchocho.orderworker.service;
+
+import java.time.Duration;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rommelchocho.orderworker.model.FailedOrder;
+import com.rommelchocho.orderworker.model.OrderMessage;
+
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
+
+@Service
+@RequiredArgsConstructor
+public class RetryService {
+
+    private final ReactiveStringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${retry.max-attempts:5}")
+    private int maxAttempts;
+
+    public Mono<Void> handleRetry(OrderMessage order, Throwable error) {
+        String key = "retry:order:" + order.orderId();
+
+        return redisTemplate.opsForValue()
+            .get(key)
+            .flatMap(json -> {
+                try {
+                    FailedOrder failed = objectMapper.readValue(json, FailedOrder.class);
+                    failed.setAttempts(failed.getAttempts() + 1);
+                    failed.setLastError(error.getMessage());
+                    return Mono.just(failed);
+                } catch (Exception e) {
+                    return Mono.error(e);
+                }
+            })
+            .switchIfEmpty(Mono.just(new FailedOrder(order, 1, error.getMessage())))
+            .flatMap(failed -> {
+                if (failed.getAttempts() >= maxAttempts) {
+                    System.err.println("❌ Pedido " + order.orderId() + " marcado como fallido.");
+                    return redisTemplate.opsForValue()
+                        .set(key, toJson(failed), Duration.ofHours(24))
+                        .then(); // no reintenta más
+                }
+
+                Duration retryDelay = getExponentialBackoff(failed.getAttempts());
+                return redisTemplate.opsForValue()
+                    .set(key, toJson(failed), retryDelay)
+                    .then(Mono.delay(retryDelay).then(Mono.empty())); // solo deja que reintente en la próxima ronda
+            });
+    }
+
+    private Duration getExponentialBackoff(int attempt) {
+        return Duration.ofSeconds((long) Math.pow(2, attempt)); // 2, 4, 8, 16, etc.
+    }
+
+    private String toJson(FailedOrder failed) {
+        try {
+            return objectMapper.writeValueAsString(failed);
+        } catch (Exception e) {
+            throw new RuntimeException("JSON error", e);
+        }
+    }
+}

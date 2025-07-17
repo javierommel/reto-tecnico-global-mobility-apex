@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: orderworker
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/pedidosdb
+
+external:
+  api:
+    base-url
+    
+retry:
+  max-attempts: 5
