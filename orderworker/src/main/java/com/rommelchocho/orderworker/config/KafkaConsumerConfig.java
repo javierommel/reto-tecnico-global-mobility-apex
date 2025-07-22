@@ -16,7 +16,7 @@ public class KafkaConsumerConfig {
     public ReceiverOptions<String, String> kafkaReceiverOptions() {
         Map<String, Object> props = Map.of(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092",
-                ConsumerConfig.GROUP_ID_CONFIG, "orer-worker-group",
+                ConsumerConfig.GROUP_ID_CONFIG, "order-worker-group",
                 ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
                 ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");

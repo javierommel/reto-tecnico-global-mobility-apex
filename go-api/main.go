@@ -21,5 +21,5 @@ func main() {
 		api.GET("/productos", handlers.GetProducts)
 	}
 
-	r.Run(":8082")
+	r.Run(":8083")
 }
