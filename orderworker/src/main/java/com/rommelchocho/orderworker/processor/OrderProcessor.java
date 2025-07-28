@@ -14,10 +14,12 @@ import com.rommelchocho.orderworker.service.LockService;
 import com.rommelchocho.orderworker.service.RetryService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class OrderProcessor {
 
     private final ApiClient apiClient;
@@ -27,13 +29,14 @@ public class OrderProcessor {
 
     public Mono<Void> process(OrderMessage orderMessage) {
         String lockKey = "lock:order:" + orderMessage.orderId();
-
+        log.info("key: {}",lockKey);
         return lockService.acquireLock(lockKey)
             .flatMap(acquired -> {
                 if (!acquired) {
-                    return Mono.empty(); // otro worker está procesando
+                    log.info("Warning: Otro worker está procesando");
+                    return Mono.empty();  
                 }
-
+                log.info("Paso sin bloqueo");
                 return processInternal(orderMessage)
                     .onErrorResume(error -> retryService.handleRetry(orderMessage, error))
                     .doFinally(signal -> lockService.releaseLock(lockKey));

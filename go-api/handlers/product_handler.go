@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -12,10 +13,11 @@ import (
 
 func GetProducts(c *gin.Context) {
 	ids := strings.Split(c.Query("ids"), ",")
-	query := `SELECT product_id, name, description, price FROM products WHERE product_id = ANY($1)`
+	query := `SELECT product_id, name, description, price, active FROM products WHERE product_id = ANY($1)`
 
 	rows, err := db.DB.Query(context.Background(), query, ids)
 	if err != nil {
+		log.Printf("Error fetching products: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error querying products"})
 		return
 	}

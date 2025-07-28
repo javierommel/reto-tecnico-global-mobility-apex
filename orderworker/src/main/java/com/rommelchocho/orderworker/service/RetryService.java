@@ -11,10 +11,12 @@ import com.rommelchocho.orderworker.model.FailedOrder;
 import com.rommelchocho.orderworker.model.OrderMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RetryService {
 
     private final ReactiveStringRedisTemplate redisTemplate;
@@ -25,7 +27,7 @@ public class RetryService {
 
     public Mono<Void> handleRetry(OrderMessage order, Throwable error) {
         String key = "retry:order:" + order.orderId();
-
+        log.info("key RetryService: {} ,error:  {}",key, error);
         return redisTemplate.opsForValue()
             .get(key)
             .flatMap(json -> {
@@ -41,7 +43,7 @@ public class RetryService {
             .switchIfEmpty(Mono.just(new FailedOrder(order, 1, error.getMessage())))
             .flatMap(failed -> {
                 if (failed.getAttempts() >= maxAttempts) {
-                    System.err.println("❌ Pedido " + order.orderId() + " marcado como fallido.");
+                    log.error("Pedido " + order.orderId() + " marcado como fallido.");
                     return redisTemplate.opsForValue()
                         .set(key, toJson(failed), Duration.ofHours(24))
                         .then(); // no reintenta más

@@ -13,7 +13,7 @@ var DB *pgxpool.Pool
 func Connect() error {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://user:pass@localhost:5432/pedidosdb"
+		dsn = "postgres://user:pass@localhost:5435/ordersdb"
 	}
 
 	pool, err := pgxpool.New(context.Background(), dsn)
