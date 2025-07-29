@@ -1,26 +1,24 @@
 package com.rommelchocho.orderworker.config;
 
 import java.util.List;
-import java.util.Map;
-
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.ConsumerFactory;
 
+import lombok.AllArgsConstructor;
 import reactor.kafka.receiver.ReceiverOptions;
 
 @Configuration
+@AllArgsConstructor
 public class KafkaConsumerConfig {
+
+    private final ConsumerFactory<String, String> kafkaConsumerFactory;
+
     @Bean
     public ReceiverOptions<String, String> kafkaReceiverOptions() {
-        Map<String, Object> props = Map.of(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092",
-                ConsumerConfig.GROUP_ID_CONFIG, "order-worker-group",
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-        return ReceiverOptions.<String, String>create(props)
-                .subscription(List.of("orders-topic"));
+        ReceiverOptions<String, String> options = ReceiverOptions.<String, String>create(
+                kafkaConsumerFactory.getConfigurationProperties() // ¡Obtenemos las props del YAML!
+        );
+        return options.subscription(List.of("orders-topic"));
     }
 }

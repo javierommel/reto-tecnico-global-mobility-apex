@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
 public class RetryService {
 
     private final ReactiveStringRedisTemplate redisTemplate;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper= new ObjectMapper();
 
     @Value("${retry.max-attempts:5}")
     private int maxAttempts;

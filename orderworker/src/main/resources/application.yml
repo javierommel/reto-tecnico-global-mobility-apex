@@ -6,8 +6,16 @@ spring:
       uri: mongodb://localhost:27017/pedidosdb
 
     redis:
-      host: localhost # O la IP/nombre de tu servidor Redis
-      port: 6379    # El puerto correcto
+      host: localhost 
+      port: 6379    
+
+  kafka:
+    bootstrap-servers: localhost:9092 
+    consumer:
+      group-id: order-worker-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: latest
 
 external:
   api:
