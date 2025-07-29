@@ -20,10 +20,10 @@ func GetCustomer(c *gin.Context) {
 	).Scan(&customer.CustomerID, &customer.Name, &customer.Email, &customer.Phone, &customer.Active)
 
 	if err != nil {
-		log.Printf("Error fetching customer: %v", err)
+		log.Printf("Error no se encontro el cliente: %v", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "customer not found"})
 		return
 	}
-	log.Println("Customer fetched successfully:", customer)
+	log.Println("Cliente encontrado correctamente:", customer)
 	c.JSON(http.StatusOK, customer)
 }

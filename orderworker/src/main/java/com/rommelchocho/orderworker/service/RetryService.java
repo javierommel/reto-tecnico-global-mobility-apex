@@ -20,23 +20,26 @@ import reactor.core.publisher.Mono;
 public class RetryService {
 
     private final ReactiveStringRedisTemplate redisTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Value("${retry.max-attempts:5}")
     private int maxAttempts;
 
     public Mono<Void> handleRetry(OrderMessage order, Throwable error) {
         String key = "retry:order:" + order.orderId();
-        log.info("key RetryService: {} ,error:  {}",key, error);
+        log.info("Retry-Key: {} ", key);
         return redisTemplate.opsForValue()
             .get(key)
             .flatMap(json -> {
                 try {
+                    log.info("ingresa primero");
+                    log.info("json: {}", json);
                     FailedOrder failed = objectMapper.readValue(json, FailedOrder.class);
                     failed.setAttempts(failed.getAttempts() + 1);
                     failed.setLastError(error.getMessage());
                     return Mono.just(failed);
                 } catch (Exception e) {
+                    log.info("Error al convertir el JSON a objeto FailedOrder: {}", e.getMessage());
                     return Mono.error(e);
                 }
             })
@@ -48,10 +51,10 @@ public class RetryService {
                         .set(key, toJson(failed), Duration.ofHours(24))
                         .then(); // no reintenta más
                 }
-
                 Duration retryDelay = getExponentialBackoff(failed.getAttempts());
                 return redisTemplate.opsForValue()
                     .set(key, toJson(failed), retryDelay)
+                    .doOnError(e -> log.error("ERROR CRÍTICO: Fallo al guardar en Redis (reintento) para clave {}: {}", key, e.getMessage(), e)) // <-- AÑADE doOnError AQUÍ
                     .then(Mono.delay(retryDelay).then(Mono.empty())); // solo deja que reintente en la próxima ronda
             });
     }

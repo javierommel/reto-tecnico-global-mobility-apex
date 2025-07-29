@@ -27,7 +27,7 @@ public class OrderController {
                 customerId,
                 productIds);
         kafkaProducerService.sendOrder(order);
-        return "✅ Pedido enviado al tópico Kafka";
+        return "Pedido enviado al tópico Kafka";
     }
 
 }

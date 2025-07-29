@@ -13,4 +13,5 @@ public class RedisConfig {
             ReactiveRedisConnectionFactory reactiveRedisConnectionFactory) {
         return new ReactiveStringRedisTemplate(reactiveRedisConnectionFactory);
     }
+
 }

@@ -5,9 +5,15 @@ spring:
     mongodb:
       uri: mongodb://localhost:27017/pedidosdb
 
+    redis:
+      host: localhost # O la IP/nombre de tu servidor Redis
+      port: 6379    # El puerto correcto
+
 external:
   api:
     base-url: http://localhost:8083
     
 retry:
   max-attempts: 5
+
+    

@@ -24,7 +24,6 @@ public class ApiClient {
     private String baseUrl;
 
     public Mono<Customer> getCustomer(String customerId) {
-        log.info("url apiclient: {}",(baseUrl + "/api/clientes/{id}" + customerId));
         return webClient.get()
                 .uri(baseUrl + "/api/clientes/{id}", customerId)
                 .retrieve()
@@ -33,7 +32,6 @@ public class ApiClient {
 
     public Mono<List<Product>> getProducts(List<String> productIds) {
         String ids = String.join(",", productIds);
-        log.info("url apiclient: {}",(baseUrl + "/api/productos?ids=" + ids));
         return webClient.get()
                 .uri(baseUrl + "/api/productos?ids=" + ids)
                 .retrieve()

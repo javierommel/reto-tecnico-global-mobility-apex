@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	log.Println("Starting Go API...")
-	log.Println("Connecting to database...")
+	log.Println("Iniciando Go API...")
+	log.Println("Conectando a la DB...")
 	if err := db.Connect(); err != nil {
-		log.Fatalf(sssss"Failed to connect to DB: %v", err)
+		log.Fatalf("Error al conectar a la DB: %v", err)
 	}
 
 	r := gin.Default()

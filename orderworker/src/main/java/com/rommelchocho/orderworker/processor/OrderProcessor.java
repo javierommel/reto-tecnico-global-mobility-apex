@@ -29,14 +29,13 @@ public class OrderProcessor {
 
     public Mono<Void> process(OrderMessage orderMessage) {
         String lockKey = "lock:order:" + orderMessage.orderId();
-        log.info("key: {}",lockKey);
+        log.info("Lock-Key: {}",lockKey);
         return lockService.acquireLock(lockKey)
             .flatMap(acquired -> {
                 if (!acquired) {
-                    log.info("Warning: Otro worker está procesando");
+                    log.info("Warning: Otro worker se está procesando");
                     return Mono.empty();  
                 }
-                log.info("Paso sin bloqueo");
                 return processInternal(orderMessage)
                     .onErrorResume(error -> retryService.handleRetry(orderMessage, error))
                     .doFinally(signal -> lockService.releaseLock(lockKey));
@@ -50,9 +49,13 @@ public class OrderProcessor {
         ).flatMap(tuple -> {
             Customer customer = tuple.getT1();
             List<Product> products = tuple.getT2();
-
-            if (!customer.active() || products.size() != orderMessage.productIds().size()) {
-                return Mono.error(new RuntimeException("Datos inválidos"));
+            if(!customer.active()){
+                log.info("Error: Cliente inactivo");
+                return Mono.error(new RuntimeException("Cliente inactivo"));
+            }
+            if (products.size() != orderMessage.productIds().size()) {
+                log.info("Error: Productos no encontrados");
+                return Mono.error(new RuntimeException("Productos no encontrados"));
             }
 
             EnrichedOrder enrichedOrder = new EnrichedOrder();

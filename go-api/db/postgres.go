@@ -18,7 +18,7 @@ func Connect() error {
 
 	pool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
-		return fmt.Errorf("❌ error connecting to database: %w", err)
+		return fmt.Errorf("error al conectar a la base de datos: %w", err)
 	}
 	DB = pool
 	return nil
