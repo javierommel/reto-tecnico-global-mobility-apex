@@ -55,7 +55,6 @@ Kafka (orders-topic)
 ## Estructura del Proyecto
 ```text
 reto-tecnico-global-mobility-apex/
-├── docker-compose.yml
 ├── orderproducer/
 │   └── Dockerfile
 │   └── src/...
